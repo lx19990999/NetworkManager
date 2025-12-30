@@ -13,6 +13,9 @@
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
     <PublishTrimmed>false</PublishTrimmed>
+    <!-- 调试符号设置 -->
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
     <!-- 版本信息 -->
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
