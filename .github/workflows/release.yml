@@ -1,0 +1,77 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Get version from tag
+      id: version
+      run: |
+        $tag = "${{ github.ref }}"
+        $version = $tag -replace 'refs/tags/v', ''
+        if ($version -eq $tag) {
+            $version = "dev-$(Get-Date -Format 'yyyyMMdd-HHmm')"
+        }
+        echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+        echo "Version: $version"
+
+    - name: Restore dependencies
+      run: dotnet restore SysManager/SysManager.csproj
+
+    - name: Build
+      run: dotnet build SysManager/SysManager.csproj --configuration Release --no-restore
+
+    - name: Publish Application
+      run: |
+        dotnet publish SysManager/SysManager.csproj --configuration Release --output ./publish --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:IncludeAllContentForSelfExtract=true -p:PublishTrimmed=false -p:AssemblyVersion=${{ steps.version.outputs.VERSION }} -p:FileVersion=${{ steps.version.outputs.VERSION }} -p:Version=${{ steps.version.outputs.VERSION }}
+
+    - name: Prepare Release Assets
+      run: |
+        # 创建发布资产目录
+        New-Item -ItemType Directory -Path ./release -Force
+        # 重命名可执行文件以包含版本号
+        Copy-Item "./publish/SysManager.exe" -Destination "./release/SysManager-${{ steps.version.outputs.VERSION }}.exe"
+        # 显示发布文件信息
+        Get-ChildItem -Path "./release/" | Select-Object Name, Length | Format-Table -AutoSize
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./release/SysManager-${{ steps.version.outputs.VERSION }}.exe
+        asset_name: SysManager-${{ steps.version.outputs.VERSION }}.exe
+        asset_content_type: application/vnd.microsoft.portable-executable
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: SysManager-${{ steps.version.outputs.VERSION }}-win-x64
+        path: ./publish/

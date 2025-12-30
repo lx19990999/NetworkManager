@@ -1,0 +1,64 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ created ]
+
+env:
+  # 项目名称
+  PROJECT_NAME: SysManager
+  # 解决方案文件路径
+  SOLUTION_FILE_PATH: SysManager/SysManager.csproj
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_FILE_PATH }}
+
+    - name: Build
+      run: dotnet build ${{ env.SOLUTION_FILE_PATH }} --configuration Release --no-restore
+
+    - name: Publish
+      run: |
+        dotnet publish ${{ env.SOLUTION_FILE_PATH }} --configuration Release --output ./publish --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:IncludeAllContentForSelfExtract=true -p:PublishTrimmed=false
+
+    - name: Create Release Artifacts
+      run: |
+        # 创建发布目录
+        New-Item -ItemType Directory -Path ./release -Force
+        # 复制发布的可执行文件
+        Copy-Item "./publish/${{ env.PROJECT_NAME }}.exe" -Destination "./release/"
+        # 显示发布文件信息
+        Get-ChildItem -Path "./publish/" -Recurse | Where-Object {!$_.PSIsContainer} | Select-Object Name, Length | Format-Table -AutoSize
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.PROJECT_NAME }}-windows-x64
+        path: ./publish/
+
+    - name: Upload Release Asset
+      if: github.event_name == 'release' && github.event.action == 'created'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./publish/${{ env.PROJECT_NAME }}.exe
+        asset_name: ${{ env.PROJECT_NAME }}.exe
+        asset_content_type: application/vnd.microsoft.portable-executable
