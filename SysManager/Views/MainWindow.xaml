@@ -22,6 +22,9 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         
+        <!-- Inverse Boolean to Visibility Converter -->
+        <local:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
+        
         <!-- Menu Item Style -->
         <Style x:Key="MenuItemStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
@@ -140,25 +143,7 @@
             <TextBlock Text="{Binding BluetoothAdapterName}" Style="{StaticResource SectionHeader}" />
             <Border Style="{StaticResource MenuSeparator}" />
             
-            <!-- Bluetooth Connect/Disconnect -->
-            <Button Style="{StaticResource MenuItemStyle}" Command="{Binding ToggleBluetoothCommand}">
-                <TextBlock>
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Text" Value="连接" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsBluetoothConnected}" Value="True">
-                                    <Setter Property="Text" Value="断开" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-            </Button>
-            
-            <Border Style="{StaticResource MenuSeparator}" />
-            
-            <!-- Available Bluetooth Devices - Submenu -->
+
             <Button x:Name="BluetoothDevicesBtn" Style="{StaticResource SubmenuItemStyle}" 
                     Click="BluetoothDevicesBtn_Click">
                 <TextBlock Text="可连设备" />
@@ -220,19 +205,8 @@
             <Border Style="{StaticResource MenuSeparator}" />
             
             <!-- WiFi Connect/Disconnect -->
-            <Button Style="{StaticResource MenuItemStyle}" Command="{Binding ToggleWifiCommand}">
-                <TextBlock>
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Text" Value="连接" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsWiFiConnected}" Value="True">
-                                    <Setter Property="Text" Value="断开" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
+            <Button Style="{StaticResource MenuItemStyle}" Command="{Binding ToggleWifiCommand}" Visibility="{Binding IsWiFiConnected, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding WifiConnectionStatus}" />
             </Button>
             
             <Border Style="{StaticResource MenuSeparator}" />

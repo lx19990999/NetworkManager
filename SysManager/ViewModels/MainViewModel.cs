@@ -91,8 +91,16 @@ public class MainViewModel : ViewModelBase, IDisposable
     public string ConnectedSSID
     {
         get => _connectedSSID;
-        set => SetProperty(ref _connectedSSID, value);
+        set
+        {
+            SetProperty(ref _connectedSSID, value);
+            OnPropertyChanged(nameof(WifiConnectionStatus)); // 当ConnectedSSID变化时，通知WifiConnectionStatus也变化
+        }
     }
+
+    public string WifiConnectionStatus => string.IsNullOrEmpty(ConnectedSSID) ? "连接" : $"({ConnectedSSID}) 断开";
+
+    public Visibility WifiStatusVisibility => string.IsNullOrEmpty(ConnectedSSID) ? Visibility.Collapsed : Visibility.Visible;
 
     #endregion
 
