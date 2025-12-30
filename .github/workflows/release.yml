@@ -25,7 +25,8 @@ jobs:
         $tag = "${{ github.ref }}"
         $version = $tag -replace 'refs/tags/v', ''
         if ($version -eq $tag) {
-            $version = "dev-$(Get-Date -Format 'yyyyMMdd-HHmm')"
+            $timestamp = "$(Get-Date -Format 'yyyyMMddHHmm')"
+            $version = "0.0.0.$timestamp"
         }
         echo "VERSION=$version" >> $env:GITHUB_OUTPUT
         echo "Version: $version"
