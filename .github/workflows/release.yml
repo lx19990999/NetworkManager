@@ -19,15 +19,23 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
+    - name: Get commit count
+      id: commit_count
+      run: |
+        git fetch --all
+        $commitCount = git rev-list --count HEAD
+        echo "COMMIT_COUNT=$commitCount" >> $env:GITHUB_OUTPUT
+        echo "Commit count: $commitCount"
+
     - name: Get version from tag
       id: version
       run: |
         $tag = "${{ github.ref }}"
         $version = $tag -replace 'refs/tags/v', ''
         if ($version -eq $tag) {
-            $date = Get-Date -Format 'yyMMdd'
-            $time = Get-Date -Format 'HHmm'
-            $version = "0.0.$date.$time"
+            $commitCount = "${{ steps.commit_count.outputs.COMMIT_COUNT }}"
+            $time = Get-Date -Format 'HHmmss'
+            $version = "0.0.$commitCount.$time"
         }
         echo "VERSION=$version" >> $env:GITHUB_OUTPUT
         echo "Version: $version"
