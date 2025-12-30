@@ -34,8 +34,7 @@ jobs:
         $version = $tag -replace 'refs/tags/v', ''
         if ($version -eq $tag) {
             $commitCount = "${{ steps.commit_count.outputs.COMMIT_COUNT }}"
-            $time = Get-Date -Format 'HHmmss'
-            $version = "0.0.$commitCount.$time"
+            $version = "0.0.0.$commitCount"
         }
         echo "VERSION=$version" >> $env:GITHUB_OUTPUT
         echo "Version: $version"
